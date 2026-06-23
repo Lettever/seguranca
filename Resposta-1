@@ -1,0 +1,200 @@
+NT.889:
+enable
+configure terminal
+hostname NT.889
+interface gi0/0
+ip address 192.168.48.1 255.255.255.0
+no shutdown
+interface gi0/3/0
+ip address 8.8.20.141 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shutdown
+interface gi0/2/0
+ip address 8.8.20.137 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shutdown
+router ospf 10
+router-id 1.1.1.1
+network 192.168.48.0 0.0.0.255 area 0
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+
+NT.88:
+enable
+configure terminal
+hostname NT.88
+interface gi0/0/0
+ip address 8.8.20.134 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/1/0
+ip address 8.8.20.129 255.255.255.252
+no shutdown
+router ospf 10
+router-id 1.1.1.3
+redistribute bgp 64012 subnets
+default-information originate
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+router bgp 64012
+redistribute ospf 10
+bgp router-id 1.1.1.3
+neighbor 8.8.20.130 remote-as 63089
+redistribute ospf 10 match internal external 1 external 2
+network 8.8.20.128 mask 255.255.255.128
+network 192.168.48.0 mask 255.255.255.0
+
+NT.89:
+enable
+configure terminal
+hostname NT.89
+interface gi0/3/0
+ip address 8.8.20.142 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/2/0
+ip address 8.8.20.138 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/0/0
+ip address 8.8.20.133 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+router ospf 10
+router-id 1.1.1.2
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+
+BY.44:
+enable
+configure terminal
+hostname BY.44
+interface gi0/0/0
+ip address 13.10.75.70 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/3/0
+ip address 13.10.75.72 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 BY_SECRET
+no shutdown
+interface gi0/1/0
+ip address 132.150.117.5 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 13.10.75.65 255.255.255.252
+no shutdown
+router ospf 10
+router-id 2.2.2.2
+network 13.10.75.64 0.0.0.63 area 0
+area 0 authentication message-digest
+router bgp 63089
+bgp router-id 2.2.2.2
+neighbor 132.150.117.6 remote-as 65116
+network 13.10.75.64 mask 255.255.255.192
+
+BY.45:
+enable
+configure terminal
+hostname BY.45
+interface gi0/0/0
+ip address 13.10.75.69 255.255.255.252
+no shut
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+interface gi0/1/0
+ip address 8.8.20.130 255.255.255.252
+no shut
+interface gi0/3/0
+ip address 13.10.75.71 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 BY_SECRET
+no shutdown
+router ospf 10
+router-id 2.2.2.1
+redistribute bgp 63089 subnets
+network 13.10.75.64 0.0.0.63 area 0
+area 0 authentication message-digest
+router bgp 63089
+bgp router-id 2.2.2.1
+redistribute ospf 10
+neighbor 8.8.20.129 remote-as 64012
+neighbor 13.10.75.70 remote-as 63089
+network 13.10.75.64 mask 255.255.255.192
+
+ZW.23
+enable
+configure terminal
+hostname ZW.23
+interface gi0/1/0
+ip address 132.150.117.6 255.255.255.252
+no shut
+interface gi0/0/0
+ip address 132.150.117.1 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 13.10.75.66 255.255.255.252
+no shutdown
+router bgp 65116
+bgp router-id 3.3.3.3
+neighbor 13.10.75.65 remote-as 63089
+neighbor 132.150.117.5 remote-as 63089
+neighbor 132.150.117.2 remote-as 62140
+network 132.150.117.0 mask 255.255.255.128
+
+DR.6
+enable
+configure terminal
+hostname DR.6
+interface gi0/0/0
+ip address 132.150.117.2 255.255.255.252
+no shutdown
+interface gi0/1/0
+ip address 26.26.21.37 255.255.255.252
+no shutdown
+interface gi0/2/0
+ip address 26.26.21.33 255.255.255.252
+no shutdown
+router ospf 10
+network 26.26.21.32 0.0.0.31 area 0
+redistribute bgp 62140 subnets
+router bgp 62140
+bgp router-id 4.4.4.1
+neighbor 132.150.117.1 remote-as 65116
+network 26.26.21.32 mask 255.255.255.224
+network 10.1.48.0 mask 255.255.252.0
+redistribute ospf 10
+
+
+DR.61
+enable
+configure terminal
+hostname DR.61
+interface gi0/1/0
+ip address 26.26.21.38 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 26.26.21.34 255.255.255.252
+no shut
+interface gi0/3/0
+ip address 10.1.48.1 255.255.252.0
+no shutdown
+router ospf 10
+network 26.26.21.32 0.0.0.31 area 0
+network 10.1.48.0 0.0.3.255 area 0
+
+Servidor DNS e WEB (Requisito E)
+
+No Servidor DNS:
+    Vá ao separador Services -> DNS.
+    Ative o serviço (On).
+    Name: www.mylink.pt
+    Address: [IP do Servidor WWW] (Verifique o IP configurado no servidor WWW, ex: 192.168.48.10).
+    Clique em Add.

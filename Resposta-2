@@ -1,0 +1,232 @@
+SWCore:
+enable
+configure terminal
+hostname SWCore
+vtp domain GESTAO_WAN
+vtp mode server
+vtp password cisco
+vlan 10
+ name DATA
+vlan 20
+ name WLAN_USERS
+vlan 99
+ name MANAGEMENT
+exit
+interface range gi1/1/1-2, gi1/0/1-2, gi1/1/3
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+
+. WLAN (WPA2 Enterprise + RADIUS)
+
+Esta configuração é feita no WLC. No Packet Tracer, a interface gráfica é mais comum, mas aqui estão os parâmetros lógicos:
+
+    WLC Management: Atribuir IP na VLAN de Gestão.
+
+    RADIUS Server: Apontar para o IP do servidor AAA na Cloud Privada.
+
+        Shared Secret: radius_key (ou a definida no server).
+
+    WLAN Config:
+
+        SSID: WLAN_CORP
+
+        Security: WPA2 + 802.1X (Enterprise).
+
+        Auth Server: Selecionar o servidor RADIUS configurado.
+
+    No Servidor AAA (Cloud):
+
+        Service: RADIUS (On).
+
+        Client: IP do WLC | Password: radius_key.
+
+        User Setup: User: user_wlan | Pass: wlanpass.
+
+SWcore_a:
+enable
+configure terminal
+hostname SWCore_a
+
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+
+
+interface range gi1/1/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+interface range gi1/1/3-4
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+interface vlan 99
+ ip address 10.1.51.3 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_b:
+enable
+configure terminal
+hostname SWCore_b
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/0/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/1/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.4 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_c:
+enable
+configure terminal
+hostname SWCore_c
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/1/3-4
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/0/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.5 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_d:
+enable
+configure terminal
+hostname SWCore_d
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/0/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/1/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.6 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+DR.61:
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key TG2025hg address 8.8.20.141
+
+crypto ipsec transform-set TS_VPN esp-aes esp-sha-hmac
+exit
+
+access-list 110 permit ip 10.1.48.0 0.0.3.255 192.168.48.0 0.0.0.255
+
+crypto map MAP_VPN 10 ipsec-isakmp
+ set peer 8.8.20.141
+ set transform-set TS_VPN
+ match address 110
+exit
+
+interface gi0/1/0
+ crypto map MAP_VPN
+
+NT889:
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key TG2025hg address 26.26.21.38
+
+crypto ipsec transform-set TS_VPN esp-aes esp-sha-hmac
+exit
+
+
+access-list 110 permit ip 192.168.48.0 0.0.0.255 10.1.48.0 0.0.3.255
+
+
+crypto map MAP_VPN 10 ipsec-isakmp
+ set peer 26.26.21.38
+ set transform-set TS_VPN
+ match address 110
+exit
+
+
+interface gi0/3/0
+ crypto map MAP_VPN
