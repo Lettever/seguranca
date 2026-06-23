@@ -1,0 +1,44 @@
+O esquema representa uma rede WAN, composta por QUATRO ISPS, através da qual se pretende interligar duas infraestruturas, com o recurso a diferentes tecnologias assim como protocolos de comunicação. Pretende-se que desenvolva, teste e documente uma solução de endereçamento (IPv4), roteamento e segurança de acordo com requisitos apresentados.
+Antes de iniciar a configuração da infraestrutura é necessário planear a sua configuração. Para este efeito utilize a proposta de endereçamento IPv4 atribuído.
+
+[1] Tabela de ENDEREÇAMENTO
+Configurações // Tabela de VLSM IPv4
++----------+---------+--------------------+
+|  ISP     |  AS     |  Network Address   |
++----------+---------+--------------------+
+|  ISP DR  |  62140  |  26.26.21.32/27    |
+|  ISP ZW  |  65116  |  132.150.117.0/25  |
+|  ISP BY  |  63089  |  13.10.75.64/26    |
+|  ISP NT  |  64012  |  8.8.20.128/25     |
++----------+---------+--------------------+
+
++----------+-------------------+-----------------+-------------------+
+|  REDE    |  Network Address  |  Subnet Mask    |  Gateway Address  |
++----------+-------------------+-----------------+-------------------+
+|  DR.61   |  10.1.48.0        |  255.255.252.0  |                   |
+|  NT.899  |  192.168.48.0     |  255.255.255.0  |                   |
++----------+-------------------+-----------------+-------------------+
+
+[2] Configurações // WAN
+a. Segmente as redes dos quatro ISPs de acordo com o endereçamento IPv4 apresentado.
+b. O roteamento entre ISPs deve ser realizado apenas através de eBGP.
+C. Atribua a todos os equipamentos um Router_ID.
+d. Utilizar um protocolo de roteamento interior dinâmico no ISP NT e no ISP BY. Autenticar todas as ligações.
+e. Disponibilizar um servidor DNS para as redes locais. Configurar no DNS a resolução do endereço www.mylink.pt a apontar para o servidor WEB disponível.
+f. É proibido utilizar roteamento estático dentro dos AS/ISPS
+
+[3] Configurações // REDE DT.61
+a. Crie e configure um domínio VTP de suporte ao funcionamento da topologia de rede apresentada.
+b. Crie as VLANs necessárias ao funcionamento da topologia de rede apresentada. VLAN1 não deve ser utilizada.
+c. WLAN: utilize como security mode WPA2 Enterprise; para autenticação dos utilizadores, utilize o serviço de RADIUS disponível na CLOUD PRIVADA. Crie um utilizador para este efeito com o nome de utilizador user_wlan com a palavra-passe wlanpass (vai ser necessário controlar os AP através de um WLC).
+d. Todos os switches L3 devem ser configurados remotamente através de SSH. A autenticação no acesso por SSH deve ser realizada através de RADIUS. Utilize o serviço RADIUS/TACACS disponível na CLOUD PRIVADA.
+e. VPN/IPSec - Configurar o túnel SITE-to-SITE IPSEC, entre DT.61 e NT.899 utilizando os seguintes parâmetros: Autenticação: PSK (ISAKMP KEY "TG2025hg"); Encriptação: AES; Integridade: SHA; Diffie- Hellman: 5; Implementação de segurança: ESP.
+f. Nota: a VPN deve suportar o processo de autenticação dos utilizadores da WLAN via Radius.
+
+[4] Configurações // REDE NT.899 (8/20)
+a.  Crie as VLANs necessárias por forma a garantir segurança dos servidores.
+b. NAT - as configurações de NAT devem permitir que os hosts externos acedam aos serviços/servidores públicos (HTTPS; FTP; MAIL, DNS).
+c. A VLAN1 deve ser encerrada em todos os Switchs; Todo o tráfego não relacionado com as VLANs deve passar pela VLAN Nativa.
+d. Firewall- configure as ACLs e as funcionalidades firewall por forma a implementar as seguintes políticas de segurança: (1) todo o tráfego com destino aos servidores públicos deve ser inspecionado (inspect); (2) autorizar o acesso aos servidores públicos para os serviços HTTP, HTTPS, SMTP, FTP, ICMP e DNS.
+e. VPN/IPSec - Suportar a abertura de VPN entre DR.61 e NT.899 de apoio ao serviço de autenticação via
+RADIUS.

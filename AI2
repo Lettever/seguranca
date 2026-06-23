@@ -1,0 +1,533 @@
+Resolve o seguinte problema no packet tracer, diz todos os comandos e intruções necessárias para resolver a questao [4]
+```
+Enunciado:
+O esquema representa uma rede WAN, composta por QUATRO ISPS, através da qual se pretende interligar duas infraestruturas, com o recurso a diferentes tecnologias assim como protocolos de comunicação. Pretende-se que desenvolva, teste e documente uma solução de endereçamento (IPv4), roteamento e segurança de acordo com requisitos apresentados.
+Antes de iniciar a configuração da infraestrutura é necessário planear a sua configuração. Para este efeito utilize a proposta de endereçamento IPv4 atribuído.
+O NT.889 não pertence ao ISP NT
+
+[1] Tabela de ENDEREÇAMENTO
+Configurações // Tabela de VLSM IPv4
++----------+---------+--------------------+
+|  ISP     |  AS     |  Network Address   |
++----------+---------+--------------------+
+|  ISP DR  |  62140  |  26.26.21.32/27    |
+|  ISP ZW  |  65116  |  132.150.117.0/25  |
+|  ISP BY  |  63089  |  13.10.75.64/26    |
+|  ISP NT  |  64012  |  8.8.20.128/25     |
++----------+---------+--------------------+
+
++----------+-------------------+-----------------+-------------------+
+|  REDE    |  Network Address  |  Subnet Mask    |  Gateway Address  |
++----------+-------------------+-----------------+-------------------+
+|  DR.61   |  10.1.48.0        |  255.255.252.0  |                   |
+|  NT.899  |  192.168.48.0     |  255.255.255.0  |                   |
++----------+-------------------+-----------------+-------------------+
+```
+
+```
+Conexoes:
+WWW, fa0 <> CLOUD PRIVADA, gi1/0/1
+DHCP, fa0 <> CLOUD PRIVADA, gi1/0/2
+AAA, fa0 <> CLOUD PRIVADA, gi1/0/3
+CLOUD PRIVADA, gi1/0/21 <> 5505, Et0/1
+CLOUD PRIVADA, gi1/0/22 <> 5505, Et0/2
+5505, Et0/0 <> NT.889, gi0/0
+NT.889, gi0/3/0, 8.8.20.141 <> NT.89, gi0/3/0, 8.8.20.142
+NT.889, gi0/2/0, 8.8.20.137 <> NT.89, gi0/2/0, 8.8.20.138
+NT.89, gi0/0/0, 8.8.20.133 <> NT.88, gi0/0/0, 8.8.20.134
+NT.88, gi0/1/0, 8.8.20.129 <> BY.45, gi0/1/0, 8.8.20.130
+BY.45, gi0/0/0, 13.10.75.69 <> BY.44, gi0/0/0, 13.10.75.70
+BY.45, gi0/0/3, 13.10.75.71 <> BY.44, gi0/0/3, 13.10.75.72
+BY.44, gi0/1/0, 132.150.117.5 <> ZW.23, gi0/1/0, 132.150.117.6
+BY.44, gi0/2/0, 13.10.75.65 <> ZW.23, gi0/2/0, 13.10.75.66
+ZW.23, gi0/0/0, 132.150.117.1 <> DR.6, gi0/0/0, 132.150.117.2
+DR.6, gi0/1/0, 26.26.21.37 <> DR.61, gi0/2/0, 26.26.21.38
+DR.6, gi0/2/0, 26.26.21.33 <> DR.61, gi0/2/0, 26.26.21.34
+DR.61, gi0/3/0 <> SWCore, gi1/1/3
+SWCore, gi1/0/1 <> WLC, gi1
+SWCore, gi1/1/1 <> SWCore_a, gi1/1/1
+SWCore, gi1/1/2 <> SWCore_a, gi1/1/2
+SWCore, gi1/0/1 <> SWCore_b, gi1/0/1
+SWCore, gi1/0/2 <> SWCore_b, gi1/0/2
+SWCore_a, gi1/1/4 <> SWCore_c, gi1/1/4
+SWCore_a, gi1/1/3 <> SWCore_c, gi1/1/3
+SWCore_c, gi1/0/1 <> SWCore_d, gi1/0/1
+SWCore_c, gi1/0/2 <> SWCore_d, gi1/0/2
+SWCore_d, gi1/1/1 <> SWCore_b gi1/1/1
+SWCore_d, gi1/1/2 <> SWCore_b gi1/1/2
+
+Os switches de layer 3 seguem a seguinte logica
++-+-+
+|c|d|
++-+-+
+|a|b|
++-+-+
+```
+
+```
+Perguntas:
+[2] Configurações // WAN
+a. Segmente as redes dos quatro ISPs de acordo com o endereçamento IPv4 apresentado.
+b. O roteamento entre ISPs deve ser realizado apenas através de eBGP.
+C. Atribua a todos os equipamentos um Router_ID.
+d. Utilizar um protocolo de roteamento interior dinâmico no ISP NT e no ISP BY. Autenticar todas as ligações.
+e. Disponibilizar um servidor DNS para as redes locais. Configurar no DNS a resolução do endereço www.mylink.pt a apontar para o servidor WEB disponível.
+f. É proibido utilizar roteamento estático dentro dos AS/ISPS
+
+[3] Configurações // REDE DT.61
+a. Crie e configure um domínio VTP de suporte ao funcionamento da topologia de rede apresentada.
+b. Crie as VLANs necessárias ao funcionamento da topologia de rede apresentada. VLAN1 não deve ser utilizada.
+c. WLAN: utilize como security mode WPA2 Enterprise; para autenticação dos utilizadores, utilize o serviço de RADIUS disponível na CLOUD PRIVADA. Crie um utilizador para este efeito com o nome de utilizador user_wlan com a palavra-passe wlanpass (vai ser necessário controlar os AP através de um WLC).
+d. Todos os switches L3 devem ser configurados remotamente através de SSH. A autenticação no acesso por SSH deve ser realizada através de RADIUS. Utilize o serviço RADIUS/TACACS disponível na CLOUD PRIVADA.
+e. VPN/IPSec - Configurar o túnel SITE-to-SITE IPSEC, entre DT.61 e NT.899 utilizando os seguintes parâmetros: Autenticação: PSK (ISAKMP KEY "TG2025hg"); Encriptação: AES; Integridade: SHA; Diffie- Hellman: 5; Implementação de segurança: ESP.
+f. Nota: a VPN deve suportar o processo de autenticação dos utilizadores da WLAN via Radius.
+
+[4] Configurações // REDE NT.899 (8/20)
+a.  Crie as VLANs necessárias por forma a garantir segurança dos servidores.
+b. NAT - as configurações de NAT devem permitir que os hosts externos acedam aos serviços/servidores públicos (HTTPS; FTP; MAIL, DNS).
+c. A VLAN1 deve ser encerrada em todos os Switchs; Todo o tráfego não relacionado com as VLANs deve passar pela VLAN Nativa.
+d. Firewall- configure as ACLs e as funcionalidades firewall por forma a implementar as seguintes políticas de segurança: (1) todo o tráfego com destino aos servidores públicos deve ser inspecionado (inspect); (2) autorizar o acesso aos servidores públicos para os serviços HTTP, HTTPS, SMTP, FTP, ICMP e DNS.
+e. VPN/IPSec - Suportar a abertura de VPN entre DR.61 e NT.899 de apoio ao serviço de autenticação via
+RADIUS.
+```
+
+```
+Resposta da pergunta [2]
+NT.889:
+enable
+configure terminal
+hostname NT.889
+interface gi0/0
+ip address 192.168.48.1 255.255.255.0
+no shutdown
+interface gi0/3/0
+ip address 8.8.20.141 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shutdown
+interface gi0/2/0
+ip address 8.8.20.137 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shutdown
+router ospf 10
+router-id 1.1.1.1
+network 192.168.48.0 0.0.0.255 area 0
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+
+NT.88:
+enable
+configure terminal
+hostname NT.88
+interface gi0/0/0
+ip address 8.8.20.134 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/1/0
+ip address 8.8.20.129 255.255.255.252
+no shutdown
+router ospf 10
+router-id 1.1.1.3
+redistribute bgp 64012 subnets
+default-information originate
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+router bgp 64012
+redistribute ospf 10
+bgp router-id 1.1.1.3
+neighbor 8.8.20.130 remote-as 63089
+redistribute ospf 10 match internal external 1 external 2
+network 8.8.20.128 mask 255.255.255.128
+network 192.168.48.0 mask 255.255.255.0
+
+NT.89:
+enable
+configure terminal
+hostname NT.89
+interface gi0/3/0
+ip address 8.8.20.142 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/2/0
+ip address 8.8.20.138 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/0/0
+ip address 8.8.20.133 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+router ospf 10
+router-id 1.1.1.2
+network 8.8.20.128 0.0.0.127 area 0
+area 0 authentication message-digest
+
+BY.44:
+enable
+configure terminal
+hostname BY.44
+interface gi0/0/0
+ip address 13.10.75.70 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+no shut
+interface gi0/3/0
+ip address 13.10.75.72 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 BY_SECRET
+no shutdown
+interface gi0/1/0
+ip address 132.150.117.5 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 13.10.75.65 255.255.255.252
+no shutdown
+router ospf 10
+router-id 2.2.2.2
+network 13.10.75.64 0.0.0.63 area 0
+area 0 authentication message-digest
+router bgp 63089
+bgp router-id 2.2.2.2
+neighbor 132.150.117.6 remote-as 65116
+network 13.10.75.64 mask 255.255.255.192
+
+BY.45:
+enable
+configure terminal
+hostname BY.45
+interface gi0/0/0
+ip address 13.10.75.69 255.255.255.252
+no shut
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 CISCO123
+interface gi0/1/0
+ip address 8.8.20.130 255.255.255.252
+no shut
+interface gi0/3/0
+ip address 13.10.75.71 255.255.255.252
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 BY_SECRET
+no shutdown
+router ospf 10
+router-id 2.2.2.1
+redistribute bgp 63089 subnets
+network 13.10.75.64 0.0.0.63 area 0
+area 0 authentication message-digest
+router bgp 63089
+bgp router-id 2.2.2.1
+redistribute ospf 10
+neighbor 8.8.20.129 remote-as 64012
+neighbor 13.10.75.70 remote-as 63089
+network 13.10.75.64 mask 255.255.255.192
+
+ZW.23
+enable
+configure terminal
+hostname ZW.23
+interface gi0/1/0
+ip address 132.150.117.6 255.255.255.252
+no shut
+interface gi0/0/0
+ip address 132.150.117.1 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 13.10.75.66 255.255.255.252
+no shutdown
+router bgp 65116
+bgp router-id 3.3.3.3
+neighbor 13.10.75.65 remote-as 63089
+neighbor 132.150.117.5 remote-as 63089
+neighbor 132.150.117.2 remote-as 62140
+network 132.150.117.0 mask 255.255.255.128
+
+DR.6
+enable
+configure terminal
+hostname DR.6
+interface gi0/0/0
+ip address 132.150.117.2 255.255.255.252
+no shutdown
+interface gi0/1/0
+ip address 26.26.21.37 255.255.255.252
+no shutdown
+interface gi0/2/0
+ip address 26.26.21.33 255.255.255.252
+no shutdown
+router ospf 10
+network 26.26.21.32 0.0.0.31 area 0
+redistribute bgp 62140 subnets
+router bgp 62140
+bgp router-id 4.4.4.1
+neighbor 132.150.117.1 remote-as 65116
+network 26.26.21.32 mask 255.255.255.224
+network 10.1.48.0 mask 255.255.252.0
+redistribute ospf 10
+
+
+DR.61
+enable
+configure terminal
+hostname DR.61
+interface gi0/1/0
+ip address 26.26.21.38 255.255.255.252
+no shut
+interface gi0/2/0
+ip address 26.26.21.34 255.255.255.252
+no shut
+interface gi0/3/0
+ip address 10.1.48.1 255.255.252.0
+no shutdown
+router ospf 10
+network 26.26.21.32 0.0.0.31 area 0
+network 10.1.48.0 0.0.3.255 area 0
+
+Servidor DNS e WEB (Requisito E)
+
+No Servidor DNS:
+    Vá ao separador Services -> DNS.
+    Ative o serviço (On).
+    Name: www.mylink.pt
+    Address: [IP do Servidor WWW] (Verifique o IP configurado no servidor WWW, ex: 192.168.48.10).
+    Clique em Add.
+
+```
+
+```
+Resposta da pergunta [3]
+SWCore:
+enable
+configure terminal
+hostname SWCore
+vtp domain GESTAO_WAN
+vtp mode server
+vtp password cisco
+vlan 10
+ name DATA
+vlan 20
+ name WLAN_USERS
+vlan 99
+ name MANAGEMENT
+exit
+interface range gi1/1/1-2, gi1/0/1-2, gi1/1/3
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+
+. WLAN (WPA2 Enterprise + RADIUS)
+
+Esta configuração é feita no WLC. No Packet Tracer, a interface gráfica é mais comum, mas aqui estão os parâmetros lógicos:
+
+    WLC Management: Atribuir IP na VLAN de Gestão.
+
+    RADIUS Server: Apontar para o IP do servidor AAA na Cloud Privada.
+
+        Shared Secret: radius_key (ou a definida no server).
+
+    WLAN Config:
+
+        SSID: WLAN_CORP
+
+        Security: WPA2 + 802.1X (Enterprise).
+
+        Auth Server: Selecionar o servidor RADIUS configurado.
+
+    No Servidor AAA (Cloud):
+
+        Service: RADIUS (On).
+
+        Client: IP do WLC | Password: radius_key.
+
+        User Setup: User: user_wlan | Pass: wlanpass.
+
+SWcore_a:
+enable
+configure terminal
+hostname SWCore_a
+
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+
+
+interface range gi1/1/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+interface range gi1/1/3-4
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+
+interface vlan 99
+ ip address 10.1.51.3 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_b:
+enable
+configure terminal
+hostname SWCore_b
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/0/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/1/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.4 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_c:
+enable
+configure terminal
+hostname SWCore_c
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/1/3-4
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/0/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.5 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+SWCore_d:
+enable
+configure terminal
+hostname SWCore_d
+
+vtp domain GESTAO_WAN
+vtp mode client
+vtp password cisco
+
+interface range gi1/0/1-2
+ channel-group 1 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface range gi1/1/1-2
+ channel-group 2 mode active
+ switchport mode trunk
+ switchport trunk native vlan 99
+
+interface vlan 99
+ ip address 10.1.51.6 255.255.252.0
+ no shutdown
+exit
+ip default-gateway 10.1.48.1
+
+aaa new-model
+radius-server host 192.168.48.12 key radius_key
+aaa authentication login SSH_AUTH group radius local
+line vty 0 15
+ transport input ssh
+ login authentication SSH_AUTH
+exit
+
+DR.61:
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key TG2025hg address 8.8.20.141
+
+crypto ipsec transform-set TS_VPN esp-aes esp-sha-hmac
+exit
+
+access-list 110 permit ip 10.1.48.0 0.0.3.255 192.168.48.0 0.0.0.255
+
+crypto map MAP_VPN 10 ipsec-isakmp
+ set peer 8.8.20.141
+ set transform-set TS_VPN
+ match address 110
+exit
+
+interface gi0/1/0
+ crypto map MAP_VPN
+
+NT889:
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key TG2025hg address 26.26.21.38
+
+crypto ipsec transform-set TS_VPN esp-aes esp-sha-hmac
+exit
+
+
+access-list 110 permit ip 192.168.48.0 0.0.0.255 10.1.48.0 0.0.3.255
+
+
+crypto map MAP_VPN 10 ipsec-isakmp
+ set peer 26.26.21.38
+ set transform-set TS_VPN
+ match address 110
+exit
+
+
+interface gi0/3/0
+ crypto map MAP_VPN
+```

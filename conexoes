@@ -1,0 +1,36 @@
+WWW, fa0 <> CLOUD PRIVADA, gi1/0/1
+DHCP, fa0 <> CLOUD PRIVADA, gi1/0/2
+AAA, fa0 <> CLOUD PRIVADA, gi1/0/3
+CLOUD PRIVADA, gi1/0/21 <> 5505, Et0/1
+CLOUD PRIVADA, gi1/0/22 <> 5505, Et0/2
+5505, Et0/0 <> NT.889, gi0/0
+NT.889, gi0/3/0, 8.8.20.141 <> NT.89, gi0/3/0, 8.8.20.142
+NT.889, gi0/2/0, 8.8.20.137 <> NT.89, gi0/2/0, 8.8.20.138
+NT.89, gi0/0/0, 8.8.20.133 <> NT.88, gi0/0/0, 8.8.20.134
+NT.88, gi0/1/0, 8.8.20.129 <> BY.45, gi0/1/0, 8.8.20.130
+BY.45, gi0/0/0, 13.10.75.69 <> BY.44, gi0/0/0, 13.10.75.70
+BY.45, gi0/0/3, 13.10.75.71 <> BY.44, gi0/0/3, 13.10.75.72
+BY.44, gi0/1/0, 132.150.117.5 <> ZW.23, gi0/1/0, 132.150.117.6
+BY.44, gi0/2/0, 13.10.75.65 <> ZW.23, gi0/2/0, 13.10.75.66
+ZW.23, gi0/0/0, 132.150.117.1 <> DR.6, gi0/0/0, 132.150.117.2
+DR.6, gi0/1/0, 26.26.21.37 <> DR.61, gi0/2/0, 26.26.21.38
+DR.6, gi0/2/0, 26.26.21.33 <> DR.61, gi0/2/0, 26.26.21.34
+DR.61, gi0/3/0 <> SWCore, gi1/1/3
+SWCore, gi1/0/1 <> WLC, gi1
+SWCore, gi1/1/1 <> SWCore_a, gi1/1/1
+SWCore, gi1/1/2 <> SWCore_a, gi1/1/2
+SWCore, gi1/0/1 <> SWCore_b, gi1/0/1
+SWCore, gi1/0/2 <> SWCore_b, gi1/0/2
+SWCore_a, gi1/1/4 <> SWCore_c, gi1/1/4
+SWCore_a, gi1/1/3 <> SWCore_c, gi1/1/3
+SWCore_c, gi1/0/1 <> SWCore_d, gi1/0/1
+SWCore_c, gi1/0/2 <> SWCore_d, gi1/0/2
+SWCore_d, gi1/1/1 <> SWCore_b gi1/1/1
+SWCore_d, gi1/1/2 <> SWCore_b gi1/1/2
+
+Os switches de layer 3 seguem a seguinte logica
++-+-+
+|c|d|
++-+-+
+|a|b|
++-+-+
