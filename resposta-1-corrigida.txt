@@ -1,0 +1,307 @@
+============================================================
+RESPOSTA-1 CORRIGIDA — Routers ISP (WAN)
+============================================================
+
+------------------------------------------------------------
+NT.889
+------------------------------------------------------------
+enable
+configure terminal
+hostname NT.889
+!
+interface gi0/0
+ ip address 192.168.48.1 255.255.255.0
+ no shutdown
+!
+interface gi0/3/0
+ ip address 8.8.20.141 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/2/0
+ ip address 8.8.20.137 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+router ospf 10
+ router-id 1.1.1.1
+ area 0 authentication message-digest
+ network 192.168.48.0 0.0.0.255 area 0
+ network 8.8.20.128 0.0.0.127 area 0
+
+! [SEM ALTERAÇÕES]
+
+
+------------------------------------------------------------
+NT.89
+------------------------------------------------------------
+enable
+configure terminal
+hostname NT.89
+!
+interface gi0/3/0
+ ip address 8.8.20.142 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/2/0
+ ip address 8.8.20.138 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/0/0
+ ip address 8.8.20.133 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+router ospf 10
+ router-id 1.1.1.2
+ area 0 authentication message-digest
+ network 8.8.20.128 0.0.0.127 area 0
+
+! [SEM ALTERAÇÕES]
+
+
+------------------------------------------------------------
+NT.88
+------------------------------------------------------------
+enable
+configure terminal
+hostname NT.88
+!
+interface gi0/0/0
+ ip address 8.8.20.134 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/1/0
+ ip address 8.8.20.129 255.255.255.252
+ no shutdown
+!
+router ospf 10
+ router-id 1.1.1.3
+ area 0 authentication message-digest
+ network 8.8.20.128 0.0.0.127 area 0
+ redistribute bgp 64012 subnets
+ default-information originate
+!
+router bgp 64012
+ bgp router-id 1.1.1.3
+ neighbor 8.8.20.130 remote-as 63089
+ network 8.8.20.128 mask 255.255.255.128
+ network 192.168.48.0 mask 255.255.255.0
+ redistribute ospf 10 match internal external 1 external 2
+
+! [SEM ALTERAÇÕES]
+
+
+------------------------------------------------------------
+BY.44
+------------------------------------------------------------
+enable
+configure terminal
+hostname BY.44
+!
+interface gi0/0/0
+ ip address 13.10.75.70 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/3/0
+ ip address 13.10.75.72 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 BY_SECRET
+ no shutdown
+!
+interface gi0/1/0
+ ip address 132.150.117.5 255.255.255.252
+ no shutdown
+!
+interface gi0/2/0
+ ip address 13.10.75.65 255.255.255.252
+ no shutdown
+!
+router ospf 10
+ router-id 2.2.2.2
+ area 0 authentication message-digest
+ network 13.10.75.64 0.0.0.63 area 0
+!
+router bgp 63089
+ bgp router-id 2.2.2.2
+ neighbor 132.150.117.6 remote-as 65116
+ neighbor 13.10.75.69 remote-as 63089
+ neighbor 13.10.75.69 next-hop-self
+ network 13.10.75.64 mask 255.255.255.192
+
+! [CORRECÇÃO] Adicionado neighbor iBGP 13.10.75.69 com next-hop-self
+! para BY.44 poder passar rotas externas (ZW/DR) ao BY.45
+
+
+------------------------------------------------------------
+BY.45
+------------------------------------------------------------
+enable
+configure terminal
+hostname BY.45
+!
+! [CORRECÇÃO] A autenticação OSPF estava FORA do bloco interface.
+! Movida para dentro da interface gi0/0/0.
+interface gi0/0/0
+ ip address 13.10.75.69 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/1/0
+ ip address 8.8.20.130 255.255.255.252
+ no shutdown
+!
+interface gi0/3/0
+ ip address 13.10.75.71 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 BY_SECRET
+ no shutdown
+!
+router ospf 10
+ router-id 2.2.2.1
+ area 0 authentication message-digest
+ network 13.10.75.64 0.0.0.63 area 0
+ redistribute bgp 63089 subnets
+!
+router bgp 63089
+ bgp router-id 2.2.2.1
+ neighbor 8.8.20.129 remote-as 64012
+ neighbor 13.10.75.70 remote-as 63089
+ neighbor 13.10.75.70 next-hop-self
+ network 13.10.75.64 mask 255.255.255.192
+ redistribute ospf 10
+
+! [CORRECÇÃO] Adicionado next-hop-self no neighbor iBGP 13.10.75.70
+! para evitar problemas de next-hop inacessível ao passar rotas NT para BY.44
+
+
+------------------------------------------------------------
+ZW.23
+------------------------------------------------------------
+enable
+configure terminal
+hostname ZW.23
+!
+interface gi0/1/0
+ ip address 132.150.117.6 255.255.255.252
+ no shutdown
+!
+interface gi0/0/0
+ ip address 132.150.117.1 255.255.255.252
+ no shutdown
+!
+interface gi0/2/0
+ ip address 13.10.75.66 255.255.255.252
+ no shutdown
+!
+router bgp 65116
+ bgp router-id 3.3.3.3
+ neighbor 132.150.117.5 remote-as 63089
+ neighbor 13.10.75.65 remote-as 63089
+ neighbor 132.150.117.2 remote-as 62140
+ network 132.150.117.0 mask 255.255.255.128
+
+! [SEM ALTERAÇÕES]
+
+
+------------------------------------------------------------
+DR.6
+------------------------------------------------------------
+enable
+configure terminal
+hostname DR.6
+!
+! [CORRECÇÃO] Adicionada autenticação OSPF MD5 nas interfaces WAN
+interface gi0/0/0
+ ip address 132.150.117.2 255.255.255.252
+ no shutdown
+!
+interface gi0/1/0
+ ip address 26.26.21.37 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+interface gi0/2/0
+ ip address 26.26.21.33 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+router ospf 10
+ router-id 4.4.4.1
+ area 0 authentication message-digest
+ network 26.26.21.32 0.0.0.31 area 0
+ redistribute bgp 62140 subnets
+!
+router bgp 62140
+ bgp router-id 4.4.4.1
+ neighbor 132.150.117.1 remote-as 65116
+ network 26.26.21.32 mask 255.255.255.224
+ network 10.1.48.0 mask 255.255.252.0
+ redistribute ospf 10
+
+! [CORRECÇÃO] Adicionado router-id no OSPF
+! [CORRECÇÃO] Adicionado area 0 authentication message-digest
+! [CORRECÇÃO] Adicionada autenticação MD5 nas interfaces gi0/1/0 e gi0/2/0
+
+
+------------------------------------------------------------
+DR.61
+------------------------------------------------------------
+enable
+configure terminal
+hostname DR.61
+!
+! [CORRECÇÃO] Adicionada autenticação OSPF MD5 nas interfaces WAN
+interface gi0/1/0
+ ip address 26.26.21.38 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+! [CORRECÇÃO] DR.6 gi0/2/0 <> DR.61 gi0/2/0 — ambos usam gi0/2/0
+interface gi0/2/0
+ ip address 26.26.21.34 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 CISCO123
+ no shutdown
+!
+! [CORRECÇÃO] gi0/3/0 liga ao SWCore — é o gateway da rede 10.1.48.0/22
+! A máscara original (/22) estava correta para ser o gateway
+! mas o ip address deve ser .1 com máscara correta
+interface gi0/3/0
+ ip address 10.1.48.1 255.255.252.0
+ no shutdown
+!
+router ospf 10
+ router-id 4.4.4.2
+ area 0 authentication message-digest
+ network 26.26.21.32 0.0.0.31 area 0
+ network 10.1.48.0 0.0.3.255 area 0
+
+! [CORRECÇÃO] Adicionado router-id 4.4.4.2
+! [CORRECÇÃO] Adicionado area 0 authentication message-digest
+! [CORRECÇÃO] Adicionada autenticação MD5 nas interfaces gi0/1/0 e gi0/2/0
+
+
+------------------------------------------------------------
+Servidor DNS — Packet Tracer (Requisito 2e)
+------------------------------------------------------------
+No servidor DNS (ligado à CLOUD PRIVADA gi1/0/1 ou independente):
+  Services -> DNS -> ON
+  Name:    www.mylink.pt
+  Address: 192.168.48.10   (IP do servidor WWW)
+  Clicar em Add.

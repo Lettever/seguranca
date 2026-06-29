@@ -1,0 +1,202 @@
+============================================================
+RESPOSTA-3 CORRIGIDA — ASA 5505 + Switch CLOUD + NT.889 NAT
+============================================================
+
+------------------------------------------------------------
+ASA 5505
+------------------------------------------------------------
+! TOPOLOGIA:
+!   Et0/0 -> VLAN 2 (outside) -> NT.889 gi0/0  -> rede 192.168.48.0/24
+!   Et0/1 -> VLAN 10 (inside) -> CLOUD PRIVADA gi1/0/21
+!   Et0/2 -> VLAN 20 (dmz)   -> CLOUD PRIVADA gi1/0/22
+!
+! [CORRECÇÃO CRÍTICA] O ASA outside está na mesma rede que NT.889 gi0/0
+! (192.168.48.0/24), portanto:
+!   NT.889 gi0/0 = 192.168.48.1  (gateway do ASA)
+!   ASA outside  = 192.168.48.2
+!   ASA inside   = 192.168.48.254  (gateway dos servidores)
+! O IP outside 8.8.20.145 da resposta original estava ERRADO —
+! essa rede não existe nas conexões do enunciado.
+!
+! [CORRECÇÃO] IP inside era 192.168.48.1 = conflito com NT.889.
+! Corrigido para 192.168.48.254.
+
+enable
+configure terminal
+hostname ASA5505
+!
+interface Ethernet0/0
+ switchport access vlan 2
+ no shutdown
+!
+interface Ethernet0/1
+ switchport access vlan 10
+ no shutdown
+!
+! [CORRECÇÃO] Et0/2 não estava configurado na resposta original
+interface Ethernet0/2
+ switchport access vlan 20
+ no shutdown
+!
+! [CORRECÇÃO] VLAN 1 encerrada
+interface Vlan 1
+ shutdown
+!
+! [CORRECÇÃO] outside na rede 192.168.48.0/24, gateway = NT.889
+interface Vlan 2
+ nameif outside
+ security-level 0
+ ip address 192.168.48.2 255.255.255.0
+ no shutdown
+!
+! [CORRECÇÃO] inside = rede dos servidores (CLOUD PRIVADA)
+interface Vlan 10
+ nameif inside
+ security-level 100
+ ip address 192.168.48.254 255.255.255.0
+ no shutdown
+!
+! DMZ (segunda porta para CLOUD PRIVADA gi1/0/22)
+interface Vlan 20
+ nameif dmz
+ security-level 50
+ ip address 192.168.48.253 255.255.255.0
+ no shutdown
+!
+! [CORRECÇÃO] gateway = NT.889 gi0/0 = 192.168.48.1
+route outside 0.0.0.0 0.0.0.0 192.168.48.1 1
+!
+! NAT estático: acesso externo aos servidores públicos
+object network OBJ_SRV_WWW
+ host 192.168.48.10
+ nat (inside,outside) static interface service tcp 443 443
+!
+object network OBJ_SRV_FTP
+ host 192.168.48.11
+ nat (inside,outside) static interface service tcp 21 21
+!
+object network OBJ_SRV_DNS
+ host 192.168.48.12
+ nat (inside,outside) static interface service udp 53 53
+!
+object network OBJ_SRV_MAIL
+ host 192.168.48.13
+ nat (inside,outside) static interface service tcp 25 25
+!
+! ACL: autorizar serviços pedidos no enunciado (HTTP, HTTPS, SMTP, FTP, ICMP, DNS)
+access-list OUTSIDE_IN extended permit tcp any host 192.168.48.10 eq 443
+access-list OUTSIDE_IN extended permit tcp any host 192.168.48.10 eq 80
+access-list OUTSIDE_IN extended permit tcp any host 192.168.48.11 eq 21
+access-list OUTSIDE_IN extended permit tcp any host 192.168.48.13 eq 25
+! [CORRECÇÃO] Faltava a palavra "permit" na linha do DNS
+access-list OUTSIDE_IN extended permit udp any host 192.168.48.12 eq 53
+access-list OUTSIDE_IN extended permit icmp any any
+!
+access-group OUTSIDE_IN in interface outside
+!
+! Inspecção de tráfego (requisito 4d — inspect)
+! [CORRECÇÃO] Adicionado inspect smtp (pedido no enunciado)
+! HTTPS (TLS) não tem inspect próprio no ASA — o tcp 443 é coberto pela ACL
+policy-map global_policy
+ class inspection_default
+  inspect http
+  inspect ftp
+  inspect smtp
+  inspect dns
+  inspect icmp
+exit
+service-policy global_policy global
+
+
+------------------------------------------------------------
+Switch da CLOUD PRIVADA
+------------------------------------------------------------
+enable
+configure terminal
+!
+vlan 99
+ name NATIVE_VLAN
+exit
+!
+! [CORRECÇÃO] Faltava switchport mode trunk nas interfaces para o ASA
+interface gi1/0/21
+ switchport mode trunk
+ switchport trunk native vlan 99
+ no shutdown
+!
+interface gi1/0/22
+ switchport mode trunk
+ switchport trunk native vlan 99
+ no shutdown
+!
+! [CORRECÇÃO] Interfaces dos servidores (access, não trunk)
+! Servidor WWW na gi1/0/1
+interface gi1/0/1
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+! Servidor DHCP na gi1/0/2
+interface gi1/0/2
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+! Servidor AAA na gi1/0/3
+interface gi1/0/3
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+! Desligar VLAN1
+interface vlan 1
+ shutdown
+
+
+------------------------------------------------------------
+NT.889  — NAT para DNS
+------------------------------------------------------------
+! [CORRECÇÃO] O NAT no NT.889 é redundante se o ASA já faz NAT.
+! O NT.889 apenas precisa de garantir que o tráfego chega ao ASA.
+! A configuração de NAT original (só DNS) estava incompleta e
+! duplicava o que o ASA faz.
+!
+! REMOVER a configuração de NAT do NT.889:
+!   no access-list 110
+!   no ip nat inside source list 110 interface gi0/3/0 overload
+!
+! O NT.889 não deve fazer NAT — o ASA trata disso.
+! O NT.889 apenas precisa de ter ip routing ativo e
+! propagar a rede 192.168.48.0/24 via OSPF (já configurado).
+!
+! Se por algum motivo o Packet Tracer exigir NAT no NT.889
+! (ex: para tráfego DNS externo), usar:
+!
+! interface gi0/0
+!  ip nat inside
+! interface gi0/3/0
+!  ip nat outside
+! interface gi0/2/0
+!  ip nat outside
+! ip nat inside source list 110 interface gi0/3/0 overload
+! access-list 110 permit ip 192.168.48.0 0.0.0.255 any
+
+
+============================================================
+RESUMO DAS CORRECÇÕES — RESPOSTA-3
+============================================================
+
+ASA 5505:
+  1. IP outside: 8.8.20.145 -> 192.168.48.2 (rede correta conforme conexoes.txt)
+  2. IP inside:  192.168.48.1 -> 192.168.48.254 (evitar conflito com NT.889)
+  3. Gateway:    8.8.20.146 -> 192.168.48.1 (NT.889 gi0/0)
+  4. Et0/2 (VLAN 20 / dmz) adicionado
+  5. ACL DNS: adicionada palavra "permit" em falta
+  6. inspect smtp adicionado ao policy-map
+
+Switch CLOUD:
+  7. switchport mode trunk adicionado em gi1/0/21 e gi1/0/22
+  8. Interfaces gi1/0/1, gi1/0/2, gi1/0/3 configuradas (servidores)
+
+NT.889 NAT:
+  9. NAT removido do NT.889 — duplicação com o ASA
